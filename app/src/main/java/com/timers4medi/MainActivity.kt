@@ -11,9 +11,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.CircleShape
@@ -33,13 +31,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.timers4medi.extensions.round
 import com.timers4medi.ui.theme.Timers4MediTheme
+import com.timers4medi.utils.countdownFormatter
 import kotlinx.coroutines.delay
-import kotlin.math.roundToInt
 import kotlin.time.Duration.Companion.seconds
 
 class MainActivity : ComponentActivity() {
@@ -53,7 +49,7 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     CircleTimer(
-                        time = 1f,
+                        timeInSec = 10,
                         size = 132.dp,
                         callback = { println("KONIEC COUNT") },
                     )
@@ -65,14 +61,18 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun CircleTimer(
-    time: Float,
+    timeInSec: Int,
     size: Dp,
     callback: () -> Unit,
 ) {
 
+    val refreshFrequency = 1
+    val multiplier = 1/refreshFrequency
+    val step = (timeInSec / refreshFrequency).toFloat()
     var isRunning by remember { mutableStateOf(false) }
-    var progress by remember { mutableStateOf(0.0f) }
-    var displayedTimerText by remember { mutableStateOf(time.toString()) }
+    var progress by remember { mutableStateOf(0f) }
+    var elapsedTime by remember { mutableStateOf(0f) }
+    var displayedTimerText by remember { mutableStateOf(timeInSec.toString()) }
     val color = remember { Animatable(Color.Gray) }
     val animatedProgress = animateFloatAsState(
         targetValue = progress,
@@ -80,10 +80,17 @@ fun CircleTimer(
     ).value
 
     LaunchedEffect(key1 = isRunning) {
-        while (progress < time && isRunning) {
-            delay(0.1.seconds)
-            progress += 0.01f
-            displayedTimerText = (time - progress).round(2).toString()
+        while (isRunning) {
+            delay(1.seconds)
+            progress += 0.1f
+            elapsedTime += 1
+            val countdown = (timeInSec - elapsedTime).toLong()
+            if (countdown <= 0) {
+                isRunning = false
+                displayedTimerText = "0:00 "
+            } else {
+                displayedTimerText = countdownFormatter(countdown)
+            }
         }
         callback()
     }
@@ -91,7 +98,7 @@ fun CircleTimer(
     //todo sync color animation with timer
     LaunchedEffect(key1 = isRunning ) {
         while (isRunning) {
-            color.animateTo(Color.Red, animationSpec = tween((time * 10000).roundToInt()))
+            color.animateTo(Color.Red, animationSpec = tween((timeInSec * 10000)))
         }
     }
 
@@ -104,13 +111,13 @@ fun CircleTimer(
             .clickable { isRunning = !isRunning }
     ) {
         CircularProgressIndicator(
-            progress = time,
+            progress = timeInSec.toFloat(),
             color = Color.Blue,
             strokeWidth = size/20,
             modifier = Modifier.size(size),
         )
         CircularProgressIndicator(
-            progress = animatedProgress,
+            progress = progress,
             color = Color.Red,
             strokeWidth = size/20,
             modifier =  Modifier.size(size),
