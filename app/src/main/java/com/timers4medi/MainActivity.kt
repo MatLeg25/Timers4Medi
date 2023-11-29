@@ -5,33 +5,33 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.animation.Animatable
 import androidx.compose.animation.core.EaseInCirc
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.ProgressIndicatorDefaults
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.geometry.center
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RadialGradientShader
+import androidx.compose.ui.graphics.Shader
+import androidx.compose.ui.graphics.ShaderBrush
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.timers4medi.ui.theme.Timers4MediTheme
@@ -45,15 +45,17 @@ class MainActivity : ComponentActivity() {
         setContent {
             Timers4MediTheme {
                 // A surface container using the 'background' color from the theme
-                Surface(
-                    //modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                  //  color = MaterialTheme.colorScheme.background
                 ) {
                     CircleTimer(
                         timeInSec = 10,
                         size = 132.dp,
                         callback = { println("KONIEC COUNT") },
                     )
+
+                    AnimatableCircle()
                 }
             }
         }
@@ -137,45 +139,41 @@ fun CircleTimer(
         )
     }
 
-//    Box {
-//        CircularProgressIndicator(progress = 1f, color = Color.Blue, strokeWidth = 2.dp)
-//        CircularProgressIndicator(progress = 0.2f, color = Color.Red, strokeWidth = 2.dp)
-//
-//        Text(text = "1:00")
-//    }
-
 }
 
 @Composable
-fun CircularProgressIndicatorSample() {
-    var progress by remember { mutableStateOf(0.1f) }
-    val animatedProgress = animateFloatAsState(
-        targetValue = progress,
-        animationSpec = ProgressIndicatorDefaults.ProgressAnimationSpec, label = ""
-    ).value
+fun AnimatableCircle() {
+    var x by remember { mutableStateOf(1f) }
 
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Spacer(Modifier.height(30.dp))
-        Text("CircularProgressIndicator with undefined progress")
-        CircularProgressIndicator()
-        Spacer(Modifier.height(30.dp))
-        Text("CircularProgressIndicator with progress set by buttons")
-        CircularProgressIndicator(progress = animatedProgress)
-        Spacer(Modifier.height(30.dp))
-        OutlinedButton(
-            onClick = {
-                if (progress < 1f) progress += 0.1f
+    LaunchedEffect(key1 = true) {
+        while (true) {
+            delay(100)
+            println("timet $x")
+            if (x>3f) x -= 1f
+            else x += 0.1f
+        }
+    }
+
+    key(x) {
+        val largeRadialGradient = object : ShaderBrush() {
+            override fun createShader(size: Size): Shader {
+                val biggerDimension = maxOf(size.height, size.width)
+                return RadialGradientShader(
+                    colors = listOf(
+                        Color(0xFF2be4dc),
+                        Color(0xFF243484),
+                    ),
+                    center = size.center,
+                    radius = biggerDimension / x,
+                    colorStops = listOf(0f, 0.95f)
+                )
             }
-        ) {
-            Text("Increase")
         }
 
-        OutlinedButton(
-            onClick = {
-                if (progress > 0f) progress -= 0.1f
-            }
-        ) {
-            Text("Decrease")
-        }
+        Box(
+            modifier = Modifier
+                .size(400.dp)
+                .background(largeRadialGradient)
+        )
     }
 }
