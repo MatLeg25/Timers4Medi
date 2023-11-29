@@ -108,7 +108,14 @@ fun CircleTimer(
             .wrapContentSize()
             .clip(shape = CircleShape)
             .background(color.value)
-            .clickable { isRunning = !isRunning }
+            .clickable {
+                if (!isRunning && elapsedTime.toInt() == timeInSec) {
+                    progress = 0.0f
+                    elapsedTime = 0.0f
+                } else {
+                    isRunning = !isRunning
+                }
+            }
     ) {
         CircularProgressIndicator(
             progress = timeInSec.toFloat(),
