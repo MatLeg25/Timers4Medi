@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.animation.Animatable
+import androidx.compose.animation.core.EaseInCirc
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -74,10 +75,6 @@ fun CircleTimer(
     var elapsedTime by remember { mutableStateOf(0f) }
     var displayedTimerText by remember { mutableStateOf(timeInSec.toString()) }
     val color = remember { Animatable(Color.Gray) }
-    val animatedProgress = animateFloatAsState(
-        targetValue = progress,
-        animationSpec = ProgressIndicatorDefaults.ProgressAnimationSpec, label = ""
-    ).value
 
     LaunchedEffect(key1 = isRunning) {
         while (isRunning) {
@@ -96,10 +93,14 @@ fun CircleTimer(
         callback()
     }
 
-    //todo sync color animation with timer
     LaunchedEffect(key1 = isRunning ) {
         while (isRunning) {
-            color.animateTo(Color.Red, animationSpec = tween((timeInSec * 10000)))
+            color.animateTo(
+                Color.Red,
+                animationSpec = tween(
+                    (timeInSec * 1000),500, EaseInCirc
+                )
+            )
         }
     }
 
