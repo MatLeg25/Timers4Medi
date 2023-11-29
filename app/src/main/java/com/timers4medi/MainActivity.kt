@@ -66,7 +66,7 @@ fun CircleTimer(
     callback: () -> Unit,
 ) {
 
-    val refreshFrequency = 1
+    val refreshFrequency = 0.1
     val multiplier = 1/refreshFrequency
     val step = (timeInSec / refreshFrequency).toFloat()
     var isRunning by remember { mutableStateOf(false) }
@@ -81,15 +81,16 @@ fun CircleTimer(
 
     LaunchedEffect(key1 = isRunning) {
         while (isRunning) {
-            delay(1.seconds)
-            progress += 0.1f
-            elapsedTime += 1
-            val countdown = (timeInSec - elapsedTime).toLong()
+            delay(refreshFrequency.seconds)
+            progress += 0.01f
+            elapsedTime += refreshFrequency.toFloat()
+            val countdown = (timeInSec - elapsedTime)
+            println("timet >> $progress , $elapsedTime , $countdown")
             if (countdown <= 0) {
                 isRunning = false
-                displayedTimerText = "0:00 "
+                displayedTimerText = "00:00"
             } else {
-                displayedTimerText = countdownFormatter(countdown)
+                displayedTimerText = countdownFormatter(countdown.toLong())
             }
         }
         callback()
