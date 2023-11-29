@@ -45,17 +45,21 @@ class MainActivity : ComponentActivity() {
         setContent {
             Timers4MediTheme {
                 // A surface container using the 'background' color from the theme
-                Column(
+                Box(
+                    contentAlignment = Alignment.Center,
                     modifier = Modifier.fillMaxSize(),
                   //  color = MaterialTheme.colorScheme.background
+
                 ) {
+                    AnimatableCircle()
+
                     CircleTimer(
                         timeInSec = 10,
                         size = 132.dp,
                         callback = { println("KONIEC COUNT") },
                     )
 
-                    AnimatableCircle()
+
                 }
             }
         }
@@ -111,7 +115,7 @@ fun CircleTimer(
         modifier = Modifier
             .wrapContentSize()
             .clip(shape = CircleShape)
-            .background(color.value)
+            //.background(color.value)
             .clickable {
                 if (!isRunning && elapsedTime.toInt() == timeInSec) {
                     progress = 0.0f
