@@ -9,16 +9,12 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -33,11 +29,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.geometry.center
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Color.Companion.Yellow
+import androidx.compose.ui.graphics.Color.Companion.hsv
 import androidx.compose.ui.graphics.RadialGradientShader
 import androidx.compose.ui.graphics.Shader
 import androidx.compose.ui.graphics.ShaderBrush
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.timers4medi.ui.theme.Timers4MediTheme
@@ -50,18 +45,23 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             Timers4MediTheme {
-                // A surface container using the 'background' color from the theme
+                var isRunning by remember { mutableStateOf(false) }
+
                 Box(
                     contentAlignment = Alignment.Center,
                     modifier = Modifier
                         .fillMaxSize()
                         .background(Color.DarkGray)
                 ) {
-                    AnimatableCircle()
+                    AnimatableCircle(isRunning)
 
                     CircleTimer(
                         timeInSec = 10,
                         size = 132.dp,
+                        isRunning = isRunning,
+                        setIsRunning = {
+                            isRunning = !isRunning
+                        },
                         callback = { println("KONIEC COUNT") },
                     )
 
@@ -76,13 +76,14 @@ class MainActivity : ComponentActivity() {
 fun CircleTimer(
     timeInSec: Int,
     size: Dp,
+    isRunning: Boolean,
+    setIsRunning: (Boolean) -> Unit,
     callback: () -> Unit,
 ) {
 
     val refreshFrequency = 0.1
     val multiplier = 1/refreshFrequency
     val step = (timeInSec / refreshFrequency).toFloat()
-    var isRunning by remember { mutableStateOf(false) }
     var progress by remember { mutableStateOf(0f) }
     var elapsedTime by remember { mutableStateOf(0f) }
     var displayedTimerText by remember { mutableStateOf(timeInSec.toString()) }
@@ -95,11 +96,11 @@ fun CircleTimer(
             elapsedTime += refreshFrequency.toFloat()
             val countdown = (timeInSec - elapsedTime)
             println("timet >> $progress , $elapsedTime , $countdown")
-            if (countdown <= 0) {
-                isRunning = false
-                displayedTimerText = "00:00"
+            displayedTimerText = if (countdown <= 0) {
+                setIsRunning(false)
+                "00:00"
             } else {
-                displayedTimerText = countdownFormatter(countdown.toLong())
+                countdownFormatter(countdown.toLong())
             }
         }
         callback()
@@ -127,20 +128,20 @@ fun CircleTimer(
                     progress = 0.0f
                     elapsedTime = 0.0f
                 } else {
-                    isRunning = !isRunning
+                    setIsRunning(!isRunning)
                 }
             }
     ) {
         CircularProgressIndicator(
             progress = timeInSec.toFloat(),
             color = Color.Blue,
-            strokeWidth = size/20,
+            strokeWidth = size/10,
             modifier = Modifier.size(size),
         )
         CircularProgressIndicator(
             progress = progress,
-            color = Color.Red,
-            strokeWidth = size/20,
+            color = hsv(120f - progress * 100, 1f, 1f,), //todo prevent more than 360
+            strokeWidth = size/10,
             modifier =  Modifier.size(size),
         )
 
@@ -152,11 +153,11 @@ fun CircleTimer(
 }
 
 @Composable
-fun AnimatableCircle() {
+fun AnimatableCircle(isRunning: Boolean) {
     var x by remember { mutableStateOf(1f) }
 
-    LaunchedEffect(key1 = true) {
-        while (true) {
+    LaunchedEffect(key1 = isRunning) {
+        while (isRunning) {
             delay(100)
             println("timet $x")
             if (x>3f) x -= 1f
