@@ -45,18 +45,31 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             Timers4MediTheme {
+                val timeInSec = 10
                 var isRunning by remember { mutableStateOf(false) }
+                val color = remember { Animatable(Color.Gray) }
+
+                LaunchedEffect(key1 = isRunning ) {
+                    while (isRunning) {
+                        color.animateTo(
+                            Color.Blue,
+                            animationSpec = tween(
+                                (timeInSec * 1000),500, EaseInCirc
+                            )
+                        )
+                    }
+                }
 
                 Box(
                     contentAlignment = Alignment.Center,
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(Color.DarkGray)
+                        .background(color.value)
                 ) {
                     AnimatableCircle(isRunning)
 
                     CircleTimer(
-                        timeInSec = 10,
+                        timeInSec = timeInSec,
                         size = 132.dp,
                         isRunning = isRunning,
                         setIsRunning = {
@@ -64,7 +77,6 @@ class MainActivity : ComponentActivity() {
                         },
                         callback = { println("KONIEC COUNT") },
                     )
-
 
                 }
             }
@@ -82,12 +94,9 @@ fun CircleTimer(
 ) {
 
     val refreshFrequency = 0.1
-    val multiplier = 1/refreshFrequency
-    val step = (timeInSec / refreshFrequency).toFloat()
     var progress by remember { mutableStateOf(0f) }
     var elapsedTime by remember { mutableStateOf(0f) }
     var displayedTimerText by remember { mutableStateOf(timeInSec.toString()) }
-    val color = remember { Animatable(Color.Gray) }
 
     LaunchedEffect(key1 = isRunning) {
         while (isRunning) {
@@ -95,7 +104,6 @@ fun CircleTimer(
             progress += 0.01f
             elapsedTime += refreshFrequency.toFloat()
             val countdown = (timeInSec - elapsedTime)
-            println("timet >> $progress , $elapsedTime , $countdown")
             displayedTimerText = if (countdown <= 0) {
                 setIsRunning(false)
                 "00:00"
@@ -106,23 +114,11 @@ fun CircleTimer(
         callback()
     }
 
-    LaunchedEffect(key1 = isRunning ) {
-        while (isRunning) {
-            color.animateTo(
-                Color.Red,
-                animationSpec = tween(
-                    (timeInSec * 1000),500, EaseInCirc
-                )
-            )
-        }
-    }
-
     Box(
         contentAlignment = Alignment.Center,
         modifier = Modifier
             .wrapContentSize()
             .clip(shape = CircleShape)
-            //.background(color.value)
             .clickable {
                 if (!isRunning && elapsedTime.toInt() == timeInSec) {
                     progress = 0.0f
